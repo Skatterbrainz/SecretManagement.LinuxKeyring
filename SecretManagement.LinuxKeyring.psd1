@@ -4,27 +4,27 @@
 	GUID                 = 'de5471eb-ecc7-4ee4-bac8-3882bfedf861'
 	Author               = 'David Stein'
 	CompanyName          = ""
-	Copyright            = ""
+	Copyright            = '© 2025 David Stein. All rights reserved.'
 	Description          = 'SecretManagement extension vault for Linux keyring (libsecret) - session-based unlocking'
 	PowerShellVersion    = '7.4'
 	CompatiblePSEditions = @('Core')
 	RequiredModules      = @('Microsoft.PowerShell.SecretManagement')
     
 	# Standard SecretManagement extension structure
-	NestedModules        = @('SecretManagement.LinuxKeyring.Extension.psm1')
-    
+	NestedModules        = @('./SecretManagement.LinuxKeyring.Extension')
+
 	FunctionsToExport    = @()
 	CmdletsToExport      = @()
 	VariablesToExport    = @()
 	AliasesToExport      = @()
-    
+
 	PrivateData          = @{
 		PSData = @{
 			Tags         = @('SecretManagement', 'Secrets', 'Linux', 'Keyring', 'libsecret', 'Session')
-			LicenseUri   = ""
-			ProjectUri   = ""
+			LicenseUri   = 'https://github.com/Skatterbrainz/SecretManagement.LinuxKeyring/blob/main/LICENSE'
+			ProjectUri   = 'https://github.com/Skatterbrainz/SecretManagement.LinuxKeyring'
 			IconUri      = ""
-			ReleaseNotes = 'SecretManagement extension for Linux keyring with session-based unlocking'
+			ReleaseNotes = 'Initial release: SecretManagement extension for Linux keyring with session-based unlocking. Provides seamless integration with Linux desktop keyring services using libsecret.'
 		}
 	}
 }
