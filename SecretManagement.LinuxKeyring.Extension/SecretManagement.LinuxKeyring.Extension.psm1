@@ -345,6 +345,24 @@ function Set-Secret {
 	}
 }
 
+function Select-ItemsFromConsoleGrid {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[object[]] $InputObject,
+
+		[Parameter(Mandatory)]
+		[string] $Title
+	)
+
+	$gridCommand = Get-Command Out-ConsoleGridView -ErrorAction SilentlyContinue
+	if (-not $gridCommand) {
+		throw "Out-ConsoleGridView command not found. Install Microsoft.PowerShell.ConsoleGuiTools to use -Selected."
+	}
+
+	return @($InputObject | Out-ConsoleGridView -Title $Title -OutputMode Multiple)
+}
+
 function Export-Secret {
 	[CmdletBinding(SupportsShouldProcess)]
 	param(
@@ -353,6 +371,9 @@ function Export-Secret {
 
 		[Parameter(Mandatory, ParameterSetName = "All")]
 		[switch] $All,
+
+		[Parameter(Mandatory, ParameterSetName = "Selected")]
+		[switch] $Selected,
 
 		[Parameter(Mandatory)]
 		[string] $Vault,
@@ -368,11 +389,23 @@ function Export-Secret {
 	}
 
 	try {
-		$secretNames = if ($PSCmdlet.ParameterSetName -eq "All") {
-			@(Microsoft.PowerShell.SecretManagement\Get-SecretInfo -Vault $Vault -ErrorAction Stop | ForEach-Object { $_.Name })
+		$secretNames = switch ($PSCmdlet.ParameterSetName) {
+			"All" {
+				@(Microsoft.PowerShell.SecretManagement\Get-SecretInfo -Vault $Vault -ErrorAction Stop | ForEach-Object { $_.Name })
+			}
+			"ByName" {
+				$Name
+			}
+			"Selected" {
+				$candidates = @(Microsoft.PowerShell.SecretManagement\Get-SecretInfo -Vault $Vault -ErrorAction Stop)
+				$selectedSecrets = Select-ItemsFromConsoleGrid -InputObject $candidates -Title "Select secrets to export from vault '$Vault'"
+				@($selectedSecrets | ForEach-Object { $_.Name })
+			}
 		}
-		else {
-			$Name
+
+		if (-not $secretNames -or $secretNames.Count -eq 0) {
+			Write-Verbose "No secrets selected for export."
+			return
 		}
 
 		$records = @()
@@ -404,6 +437,9 @@ function Import-Secret {
 		[Parameter(Mandatory, ParameterSetName = "All")]
 		[switch] $All,
 
+		[Parameter(Mandatory, ParameterSetName = "Selected")]
+		[switch] $Selected,
+
 		[Parameter(Mandatory)]
 		[string] $Vault,
 
@@ -419,12 +455,22 @@ function Import-Secret {
 		$jsonText = Get-Content -Path $Path -Raw -ErrorAction Stop
 		$records = @($jsonText | ConvertFrom-Json -ErrorAction Stop)
 
-		if ($PSCmdlet.ParameterSetName -eq "ByName") {
-			$nameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-			foreach ($n in $Name) {
-				$null = $nameSet.Add($n)
+		switch ($PSCmdlet.ParameterSetName) {
+			"ByName" {
+				$nameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+				foreach ($n in $Name) {
+					$null = $nameSet.Add($n)
+				}
+				$records = @($records | Where-Object { $nameSet.Contains($_.Name) })
 			}
-			$records = @($records | Where-Object { $nameSet.Contains($_.Name) })
+			"Selected" {
+				$records = Select-ItemsFromConsoleGrid -InputObject $records -Title "Select secrets to import from '$Path'"
+			}
+		}
+
+		if (-not $records -or $records.Count -eq 0) {
+			Write-Verbose "No secrets selected for import."
+			return 0
 		}
 
 		foreach ($record in $records) {
