@@ -13,6 +13,7 @@ Import-Module -Name Microsoft.PowerShell.SecretManagement -Force
 
 # Prefer the local workspace module during development to avoid loading an older installed copy.
 if (Test-Path -Path $localModuleManifest) {
+    Remove-Module SecretManagement.LinuxKeyring.Extension -ErrorAction SilentlyContinue
     Remove-Module SecretManagement.LinuxKeyring -ErrorAction SilentlyContinue
     Import-Module -Name $localModuleManifest -Force
 }
@@ -21,6 +22,7 @@ else {
 }
 
 Write-Output "Loaded module path: $((Get-Module -Name SecretManagement.LinuxKeyring).Path)"
+Write-Output "Loaded extension path: $((Get-Module -Name SecretManagement.LinuxKeyring.Extension).Path)"
 
 $localModulePath = Split-Path -Path $localModuleManifest -Parent
 $vault = Get-SecretVault -Name $vaultname -ErrorAction SilentlyContinue
