@@ -12,7 +12,7 @@
 	RequiredModules      = @('Microsoft.PowerShell.SecretManagement')
     
 	# Standard SecretManagement extension structure
-	NestedModules        = @('./SecretManagement.LinuxKeyring.Extension')
+	NestedModules        = @('./SecretManagement.LinuxKeyring.Extension/SecretManagement.LinuxKeyring.Extension.psd1')
 
 	FunctionsToExport    = @()
 	CmdletsToExport      = @()
