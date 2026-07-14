@@ -14,7 +14,10 @@
 	# Standard SecretManagement extension structure
 	NestedModules        = @('./SecretManagement.LinuxKeyring.Extension/SecretManagement.LinuxKeyring.Extension.psd1')
 
-	FunctionsToExport    = @()
+	FunctionsToExport    = @(
+		'Export-Secret',
+		'Import-Secret'
+	)
 	CmdletsToExport      = @()
 	VariablesToExport    = '*'
 	AliasesToExport      = @()
