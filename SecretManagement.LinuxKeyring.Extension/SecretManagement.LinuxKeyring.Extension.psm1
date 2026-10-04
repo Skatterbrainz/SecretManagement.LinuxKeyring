@@ -211,7 +211,31 @@ function ConvertFrom-ImportSecretRecord {
 		[pscustomobject] $Record
 	)
 
-	switch ($Record.Type) {
+	$recordType = $Record.Type
+	if ($recordType -is [string] -and -not [string]::IsNullOrWhiteSpace($recordType)) {
+		$recordType = $recordType.Trim()
+	}
+
+	$secretTypeValue = $null
+	if ($recordType -is [string] -and $recordType -match '^\d+$') {
+		$secretTypeValue = [int]$recordType
+	}
+	elseif ($recordType -is [System.Int16] -or $recordType -is [System.Int32] -or $recordType -is [System.Int64] -or $recordType -is [System.UInt16] -or $recordType -is [System.UInt32] -or $recordType -is [System.UInt64] -or $recordType -is [byte]) {
+		$secretTypeValue = [int]$recordType
+	}
+
+	if ($null -ne $secretTypeValue) {
+		switch ($secretTypeValue) {
+			2 { $recordType = "String" }
+			3 { $recordType = "SecureString" }
+			4 { $recordType = "PSCredential" }
+			default {
+				throw "Unsupported secret record type '$($Record.Type)' for secret '$($Record.Name)'."
+			}
+		}
+	}
+
+	switch ($recordType) {
 		"PSCredential" {
 			$password = ConvertTo-SecureString -String $Record.Password -AsPlainText -Force
 			return [pscredential]::new($Record.UserName, $password)
